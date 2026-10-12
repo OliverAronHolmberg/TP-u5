@@ -1,11 +1,12 @@
 import csv
 import subprocess
 import locale
+import os
 
 
 def truncate(text, amount):
-    if len(text) > amount:
-        return text[:amount] + "..."
+    if len(text) > amount-3:
+        return text[:amount-3] + "..."
     else:
         return text
 
@@ -27,12 +28,16 @@ def format_currency(value):
 
 
 def list_products(products):
-    for idx, product in enumerate(products, start=1):
-        name = truncate(product['name'], 24)
-        price = truncate(format_currency(product['price']), 42)
-        quantity = product['quantity']
+    try:
+        for idx, product in enumerate(products, start=1):
+            name = truncate(product['name'], 24)
+            desc = truncate(product['desc'], 42)
+            price = truncate(format_currency(product['price']), 15)
+            quantity = product['quantity']
 
-        print(f"{idx:<5}) {name:<24} \t {price:<42} \t {quantity:<5}")
+            print(f"{idx:<5} {name:<24} {desc:<42} {price:>15}     {quantity:<5}")
+    except:
+        print("Kunde inte öppna pdocuts.")
 
 
 def view_product(idx, products):
@@ -83,25 +88,27 @@ def remove_product(id, products):
 
 def load_data(filename): 
     products = []           #lista
-    
-    with open(filename, 'r') as file:       #öppnar en fil med read-rättighet
-        reader = csv.DictReader(file)
-        for row in reader:
-            id = int(row['id'])
-            name = row['name']
-            desc = row['desc']
-            price = float(row['price'])
-            quantity = int(row['quantity'])
-            
-            products.append(
-                {                   
-                    "id": id,       
-                    "name": name,
-                    "desc": desc,
-                    "price": price,
-                    "quantity": quantity
-                }
-            )
+    try: 
+        with open(filename, 'r') as file:       #öppnar en fil med read-rättighet
+            reader = csv.DictReader(file)
+            for row in reader:
+                id = int(row['id'])
+                name = row['name']
+                desc = row['desc']
+                price = float(row['price'])
+                quantity = int(row['quantity'])
+                
+                products.append(
+                    {                   
+                        "id": id,       
+                        "name": name,
+                        "desc": desc,
+                        "price": price,
+                        "quantity": quantity
+                    }
+                )
+    except:
+        print(f"{filename} kunde inte öppnas")
             
     return products
 
@@ -112,7 +119,7 @@ def load_data(filename):
 
 try:  
    locale.setlocale(locale.LC_ALL, 'sv_SE.UTF-8')  # Av någon anledning funkade inte sv_SE.UTF-8 för mig, jag fick error
-except:
+except: 
    locale.setlocale(locale.LC_ALL, 'Swedish_Sweden.1252')
 
 subprocess.run('cls', shell=True)
@@ -123,7 +130,7 @@ products = load_data('db_products.csv')
 while True:
     list_products(products)
     
-    print("-" * 140)
+    print("-" * 100)
     option = input("Vad vill du göra? [# = visa produkt | L = lägg till | T = ta bort | E = ändra | Q = avsluta och spara] ").strip().upper()
     
     if option.isdigit():
